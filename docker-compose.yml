@@ -1,0 +1,27 @@
+# Single-instance run of the GitLab access-audit app.
+#
+#   docker compose up --build
+#
+# ONE app container on http://localhost:3000. No Redis: the app uses its
+# in-memory rate limiter + TTL cache — the default single-process path
+# (REDIS_URL is simply unset).
+#
+# For the multi-instance harness (redis + 2 app instances + nginx load
+# balancer) that exercises the cluster-wide rate budget + shared report cache,
+# use the opt-in cluster file instead:
+#
+#   docker compose -f docker-compose.cluster.yml up --build
+#
+# See docs/SCALABILITY.md.
+#
+# Requires .env.local with GITLAB_TOKEN (same file the app uses locally).
+
+services:
+  web:
+    build: .
+    # GITLAB_TOKEN (and any GITLAB_BASE_URL / tuning vars) come from .env.local.
+    env_file: .env.local
+    # Defaults to 3000; override when a local `next dev` already holds it, e.g.
+    # `PORT=8080 docker compose up`.
+    ports:
+      - "${PORT:-3000}:3000"

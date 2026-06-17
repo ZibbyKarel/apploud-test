@@ -1,0 +1,19 @@
+# Keep the build context small and the image clean. None of these are needed
+# to `next build` / `next start` the app.
+node_modules
+.next
+.git
+.env
+.env.local
+graphify-out
+test-results
+playwright-report
+blob-report
+storybook-static
+*.tsbuildinfo
+.DS_Store
+# 3 MB GitLab OpenAPI spec — only consumed by `npm run gen`, never at build time
+# (the generated client under src/api/generated/ is committed).
+api.yaml
+docs
+README.md

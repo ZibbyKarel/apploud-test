@@ -1,0 +1,65 @@
+# Multi-instance harness for the GitLab access-audit app.
+#
+# Brings up ONE Redis next to TWO app instances behind an nginx load balancer,
+# so you can actually observe the multi-instance behaviour documented in
+# docs/SCALABILITY.md:
+#   - both instances share ONE cluster-wide rate budget (Bottleneck `ioredis`
+#     datastore, id `gitlab-global`), and
+#   - one instance's report sweep is served to the other from the Redis TTL cache.
+#
+# This is the opt-in, "concurrent" counterpart to the single-instance
+# docker-compose.yml (`docker compose up`). Run it explicitly with -f:
+#
+#   docker compose -f docker-compose.cluster.yml up --build
+#
+# Requires .env.local with GITLAB_TOKEN (same file the app uses locally).
+#
+# Ports on the host:
+#   3000 → nginx load balancer (round-robins web1/web2)
+#   3001 → web1 directly      (target a specific instance for the cache test)
+#   3002 → web2 directly
+#   6379 → redis              (inspect with `redis-cli`)
+
+services:
+  redis:
+    image: redis:7-alpine
+    # No persistence — this is a throwaway test cache.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  web1: &web
+    build: .
+    # GITLAB_TOKEN (and any GITLAB_BASE_URL / tuning vars) come from .env.local.
+    env_file: .env.local
+    environment:
+      # Point both instances at the shared Redis → one cluster-wide budget + cache.
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+
+  web2:
+    # Identical config to web1 (build, env, deps); only the host port differs.
+    <<: *web
+    ports:
+      - "3002:3000"
+
+  lb:
+    image: nginx:alpine
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web1
+      - web2
+    # Defaults to 3000; override when a local `next dev` already holds it, e.g.
+    # `LB_PORT=8080 docker compose -f docker-compose.cluster.yml up`.
+    ports:
+      - "${LB_PORT:-3000}:80"

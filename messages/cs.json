@@ -1,0 +1,16 @@
+{
+  "App": {
+    "title": "GitLab Access Audit",
+    "subtitle": "Zadej ID top-level skupiny a získej seznam uživatelů s přístupem ke skupinám a projektům v jejím podstromu.",
+    "inputPlaceholder": "ID skupiny, např. 10975505",
+    "submit": "Zkontrolovat",
+    "submitLoading": "Načítám…",
+    "loading": "Stahuji a spojuji data z GitLab API…",
+    "error": "Chyba: {message}",
+    "reportHeading": "Skupina {path}",
+    "groupsLabel": "Skupiny",
+    "projectsLabel": "Projekty",
+    "noMemberships": "—",
+    "totalUsers": "Celkem uživatelů: {count}"
+  }
+}

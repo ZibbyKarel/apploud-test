@@ -7,3 +7,16 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+graphify-out/
+*storybook.log
+storybook-static
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/graphify-out/
+*storybook.log
+storybook-static
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
